@@ -1,0 +1,314 @@
+//comparison operators
+//equal
+template <typename num_t>
+bool uint1024_t::operator==(num_t __n){
+	uint8_t size = sizeof(__n);
+	uint8_t pos;
+	for(pos=0;pos<size;pos++){
+		if(val[pos]!=((__n>>(pos<<3))&0xFF)) return false;
+	}
+	for(pos=size; pos<num_bytes; pos++){
+		if(val[pos] != 0) return false;
+	}
+	return true;
+}
+
+//greater or equal
+template <typename num_t>
+bool uint1024_t::operator>=(num_t __n){
+	uint8_t size = sizeof(__n);
+	uint8_t pos;
+	uint8_t tmp;
+	for(pos = size-1; pos < size; pos--){
+		tmp = ((__n>>(pos<<3))&0xFF);
+		if(val[pos] > tmp) return true;
+		else if(val[pos] < tmp) return false;
+	}
+	for(pos=size;pos<num_bytes;pos++){
+		if(val[pos] > 0U) return true;
+	}
+	return true; //neither larger or smaller must be equal
+}
+
+//less or equal
+template <typename num_t>
+bool uint1024_t::operator<=(num_t __n){
+	uint8_t size = sizeof(__n);
+	uint8_t pos;
+	uint8_t tmp;
+	for(pos = size-1; pos < size; pos--){
+		tmp = ((__n>>(pos<<3))&0xFF);
+		if(val[pos] > tmp) return false;
+		else if(val[pos] < tmp) return true;
+	}
+	for(pos=size;pos<num_bytes;pos++){
+		if(val[pos] > 0U) return false;
+	}
+	return true; //neither larger or smaller must be equal
+}
+
+//less
+template <typename num_t>
+bool uint1024_t::operator<(num_t __n){
+	uint8_t size = sizeof(__n);
+	uint8_t pos;
+	uint8_t tmp;
+	for(pos = size-1; pos < size; pos--){
+		tmp = ((__n>>(pos<<3))&0xFF);
+		if(val[pos] > tmp) return false;
+		else if(val[pos] < tmp) return true;
+	}
+	for(pos=size;pos<num_bytes;pos++){
+		if(val[pos] > 0U) return false;
+	}
+	return false; //neither larger or smaller must be equal
+}
+
+//greater
+template <typename num_t>
+bool uint1024_t::operator>(num_t __n){
+	uint8_t size = sizeof(__n);
+	uint8_t pos;
+	uint8_t tmp;
+	for(pos = size-1; pos < size; pos--){
+		tmp = ((__n>>(pos<<3))&0xFF);
+		if(val[pos] > tmp) return true;
+		else if(val[pos] < tmp) return false;
+	}
+	for(pos=size;pos<num_bytes;pos++){
+		if(val[pos] > 0U) return true;
+	}
+	return false; //neither larger or smaller must be equal
+}
+
+//assignment operators
+//equals
+template <typename num_t>
+uint1024_t& uint1024_t::operator=(num_t __n){
+	uint8_t size = sizeof(__n);
+	clear_all();
+	uint8_t x = 0;
+	for(uint8_t pos = 0; pos<size; pos++){
+		val[pos] = ((__n >> x)&0xff);
+    x+=8;
+  }
+	return *this;
+}
+
+//addition
+template <typename num_t>
+uint1024_t& uint1024_t::operator+=(num_t __n){
+	uint16_t tpos,pos=0;
+	while(__n){
+		if(CLbit(__n)){
+			tpos = pos;
+			while(checkbit(val, tpos)){
+				cbit(val, tpos);
+				tpos++;
+			}
+			sbit(val, tpos);
+		}
+		__n >>= 1U;
+		pos++;
+  }
+	return *this;
+}
+
+//subtraction
+template <typename num_t>
+uint1024_t& uint1024_t::operator-=(num_t __n){
+	uint16_t tpos,pos=0;
+	while(__n){
+		if(CLbit(__n)){
+			tpos = pos;
+			while(checkbit(val, tpos)==0){
+				sbit(val, tpos);
+				tpos++;
+			}
+			cbit(val, tpos);
+		}
+		__n >>= 1;
+		pos++;
+  }
+	return *this;
+}
+
+//multiplication
+template <typename num_t>
+uint1024_t& uint1024_t::operator*=(num_t __n){
+	*this = *this * __n;
+	return *this;
+}
+
+//division
+template <typename num_t>
+uint1024_t& uint1024_t::operator/=(num_t __n){
+	*this = *this / __n;
+	return *this;
+}
+
+//right shift
+template <typename num_t>
+uint1024_t& uint1024_t::operator>>=(num_t __n){
+	for(uint16_t pos = __n;pos<num_bits;pos++){
+		if(checkbit(val, pos)) {
+			cbit(val,pos);
+			sbit(val, (pos-__n));
+		}
+		else cbit(val,(pos-__n));
+	}
+	return *this;
+}
+
+//left shift
+template <typename num_t>
+uint1024_t& uint1024_t::operator<<=(num_t __n){
+	for(uint16_t pos=(num_bits - 1 - __n); pos<num_bits; pos--){
+		if(checkbit(val,pos)){
+			cbit(val,pos);
+			sbit(val, (pos+__n));
+		}
+		else cbit(val, (pos+__n));
+	}
+	return *this;
+}
+
+//AND
+template <typename num_t>
+uint1024_t& uint1024_t::operator&=(num_t __n){
+	uint8_t size = sizeof(__n);
+	for(uint8_t pos=0;pos<size;pos++){
+		val[pos] &= ((__n>>(pos<<3))&0xFF);
+	}
+	return *this;
+}
+
+//OR
+template <typename num_t>
+uint1024_t& uint1024_t::operator|=(num_t __n){
+	uint8_t size = sizeof(__n);
+	for(uint8_t pos=0;pos<size;pos++){
+		val[pos] |= ((__n>>(pos<<3))&0xFF);
+	}
+	return *this;
+}
+
+//XOR
+template <typename num_t>
+uint1024_t& uint1024_t::operator^=(num_t __n){
+	uint8_t size = sizeof(__n);
+	for(uint8_t pos=0;pos<size;pos++){
+		val[pos] ^= ((__n>>(pos<<3))&0xFF);
+	}
+	return *this;
+}
+
+//regular operators
+//AND
+template <typename num_t>
+uint1024_t uint1024_t::operator&(num_t __n){
+	uint1024_t res(*this);
+	res &= __n;
+	return res;
+}
+
+//OR
+template <typename num_t>
+uint1024_t uint1024_t::operator|(num_t __n){
+	uint1024_t res(*this);
+	res |= __n;
+	return res;
+}
+
+//XOR
+template <typename num_t>
+uint1024_t uint1024_t::operator^(num_t __n){
+	uint1024_t res(*this);
+	res ^= __n;
+	return res;
+}
+
+//shift right
+template <typename num_t>
+uint1024_t uint1024_t::operator>>(num_t __n){
+	uint1024_t res(*this);
+	res >>= __n;
+	return res;
+}
+
+//left shift
+template <typename num_t>
+uint1024_t uint1024_t::operator<<(num_t __n){
+	uint1024_t res(*this);
+	res <<= __n;
+	return res;
+}
+
+//addition
+template <typename num_t>
+uint1024_t uint1024_t::operator+(num_t __n){
+	uint1024_t res = *this;
+	res += __n;
+	return res;
+}
+
+//subtraction
+template <typename num_t>
+const uint1024_t uint1024_t::operator-(num_t __n)const{
+	uint1024_t res = *this;
+	res -= __n;
+	return res;
+}
+
+//multiplication
+template <typename num_t>
+uint1024_t uint1024_t::operator*(num_t __n){
+  uint1024_t tmp;
+	uint8_t bit = 0;
+	while(__n){
+	  if(CLbit(__n)) tmp += (*this << bit);
+		bit++;
+		__n>>=1;
+  }
+	return tmp;
+}
+
+//division
+template <typename num_t>
+uint1024_t uint1024_t::operator/(num_t __n){
+	uint1024_t quo;
+	uint1024_t rem;
+	uint16_t bit;
+  for(bit=num_bits-1;bit < num_bits;bit--){
+    if(checkbit(val, bit)) rem |= 1U;
+    if(rem >= __n){
+      quo |= 1U;
+      rem -= __n;
+    }
+    quo <<= 1U;
+    rem <<= 1U;
+  }
+  return (quo>>1U);
+}
+
+//modulo
+template <typename num_t>
+uint1024_t uint1024_t::operator%(num_t __n){
+	uint1024_t res(0);
+	res = *this & (__n-1U);
+	return res;
+}
+
+//exponentiation
+template <typename num_t>
+uint1024_t uint1024_t::pow(num_t __n){
+  uint1024_t tmp(*this), res(1);
+	while(__n){
+	  if(CLbit(__n)){
+			res *= tmp;
+		}
+		tmp *= tmp;
+		__n>>=1;
+  }
+	return res;
+}
